@@ -1,0 +1,48 @@
+ip addr add 10.0.1.2/30 dev eth0
+ip addr add 172.12.150.2/30 dev eth1
+ip link set eth0 up
+ip link set eth1 up
+ip route add default via 10.0.1.1 dev eth0
+echo 1 > /proc/sys/net/ipv4/ip_forward
+echo "nameserver 8.8.8.8" > /etc/resolv.conf
+iptables -P INPUT ACCEPT
+iptables -P FORWARD DROP
+iptables -P OUTPUT ACCEPT
+
+#1234
+iptables -A FORWARD -p tcp --dport 1234 -s 172.12.150.1 -j ACCEPT
+iptables -A FORWARD -p tcp --sport 1234 -d 172.12.150.1 -j ACCEPT
+iptables -A FORWARD -p tcp --dport 1234 -s 192.168.16.0/20 -j ACCEPT
+iptables -A FORWARD -p tcp --sport 1234 -d 192.168.16.0/20 -j ACCEPT
+iptables -A FORWARD -p tcp --sport 1234 -d 192.168.32.0/20 -j ACCEPT
+iptables -A FORWARD -p tcp --dport 1234 -s 192.168.32.0/20 -j ACCEPT
+
+#SFTP
+
+iptables -A FORWARD -p tcp --sport 22 -d 192.168.16.0/20 -j ACCEPT
+iptables -A FORWARD -p tcp --dport 22 -s 192.168.16.0/20 -j ACCEPT
+iptables -A FORWARD -p tcp --sport 22 -d 192.168.32.0/20 -j ACCEPT
+iptables -A FORWARD -p tcp --dport 22 -s 192.168.32.0/20 -j ACCEPT
+iptables -A FORWARD -p tcp --sport 22 -d 11.0.0.0/26 -j ACCEPT
+iptables -A FORWARD -p tcp --dport 22 -s 11.0.0.0/26 -j ACCEPT
+
+#SMTP
+iptables -A FORWARD -p tcp -s 11.0.0.0/26 --sport 587 -j ACCEPT
+iptables -A FORWARD -p tcp -s 172.12.150.1 --dport 587 -j ACCEPT
+
+#HTTP
+#//
+
+#HTTPS
+#//
+
+#DNS
+iptables -A FORWARD -p udp --sport 53 -j ACCEPT
+iptables -A FORWARD -p udp --dport 53 -j ACCEPT
+
+#ICMP
+iptables -A FORWARD -p icmp -s 172.12.150.1 -j ACCEPT
+iptables -A FORWARD -p icmp -d 172.12.150.1 -j ACCEPT
+
+
+
